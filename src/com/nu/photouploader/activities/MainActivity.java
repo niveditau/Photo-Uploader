@@ -1,9 +1,10 @@
-package com.nu.photouploader;
+package com.nu.photouploader.activities;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import com.nu.fragments.MainFragment;
+import com.nu.photouploader.R;
 
 import android.os.Bundle;
 import android.app.Activity;
@@ -36,20 +37,20 @@ public class MainActivity extends FragmentActivity {
 	        .findFragmentById(android.R.id.content);
 	    }
 		
-		try {
-	        PackageInfo info = getPackageManager().getPackageInfo(
-	                "com.nu.photouploader", 
-	                PackageManager.GET_SIGNATURES);
-	        for (Signature signature : info.signatures) {
-	            MessageDigest md = MessageDigest.getInstance("SHA");
-	            md.update(signature.toByteArray());
-	            Log.d("KeyHash:", Base64.encodeToString(md.digest(), Base64.DEFAULT));
-	            }
-	    } catch (NameNotFoundException e) {
-
-	    } catch (NoSuchAlgorithmException e) {
-
-	    }
+//		try {
+//	        PackageInfo info = getPackageManager().getPackageInfo(
+//	                "com.nu.photouploader", 
+//	                PackageManager.GET_SIGNATURES);
+//	        for (Signature signature : info.signatures) {
+//	            MessageDigest md = MessageDigest.getInstance("SHA");
+//	            md.update(signature.toByteArray());
+//	            Log.d("KeyHash:", Base64.encodeToString(md.digest(), Base64.DEFAULT));
+//	            }
+//	    } catch (NameNotFoundException e) {
+//
+//	    } catch (NoSuchAlgorithmException e) {
+//
+//	    }
 	}
 
 	@Override

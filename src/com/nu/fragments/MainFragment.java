@@ -5,6 +5,7 @@ import com.facebook.SessionState;
 import com.facebook.UiLifecycleHelper;
 import com.facebook.widget.LoginButton;
 import com.nu.photouploader.R;
+import com.nu.photouploader.activities.ImageUploaderActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -12,7 +13,9 @@ import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.Button;
 
 public class MainFragment extends Fragment{
 	
@@ -81,6 +84,16 @@ public class MainFragment extends Fragment{
 	    
 	    LoginButton authButton = (LoginButton) view.findViewById(R.id.authButton);
 	    authButton.setFragment(this);
+	    
+	    Button uploadButton = (Button) view.findViewById(R.id.upload_image_button);
+	    uploadButton.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				Intent intent = new Intent(getActivity(), ImageUploaderActivity.class);
+				startActivity(intent);
+			}
+		});
 
 	    return view;
 	}
