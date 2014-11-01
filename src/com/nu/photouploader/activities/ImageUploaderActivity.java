@@ -1,7 +1,9 @@
 package com.nu.photouploader.activities;
 
 import java.io.File;
+import java.util.Arrays;
 
+import com.facebook.Session;
 import com.kbeanie.imagechooser.api.ChooserType;
 import com.kbeanie.imagechooser.api.ChosenImage;
 import com.kbeanie.imagechooser.api.ImageChooserListener;
@@ -37,6 +39,8 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	private String filePath;
 
 	private int chooserType;
+	
+	private Button uploadToFacebook;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +57,19 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 		});
 		
 		imageViewThumbSmall = (ImageView) findViewById(R.id.imageViewThumbSmall);
+		uploadToFacebook = (Button) findViewById(R.id.uploadToFacebookButton);
+		
+		uploadToFacebook.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View arg0) {
+
+				Session.NewPermissionsRequest newPermissionsRequest = new Session
+					      .NewPermissionsRequest((Activity) arg0.getContext(), Arrays.asList("publish_actions"));
+				Session session = Session.getActiveSession();
+					    session.requestNewPublishPermissions(newPermissionsRequest);
+			}
+		});
 	}
 	
 	private void chooseImage() {
@@ -90,6 +107,9 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 //							.getFileThumbnail()).toString()));
 					imageViewThumbSmall.setImageURI(Uri.parse(new File(image
 							.getFileThumbnailSmall()).toString()));
+					String path = image.getFilePathOriginal();
+					String s = path;
+					String t = s;
 				}
 			}
 		});
@@ -104,8 +124,9 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 			}
 			imageChooserManager.submit(requestCode, data);
 		} else {
-			pbar.setVisibility(View.GONE);
+			//pbar.setVisibility(View.GONE);
 		}
+		
 	}
 	
 	// Should be called if for some reason the ImageChooserManager is null (Due

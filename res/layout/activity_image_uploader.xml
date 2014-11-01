@@ -25,4 +25,10 @@
             android:layout_below="@id/imageViewThumbSmall"
             android:text="Choose Image" />
     
+    <Button android:id="@+id/uploadToFacebookButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/buttonChooseImage"
+        android:text="@string/upload_to_facebook"/>
+    
 </RelativeLayout>
