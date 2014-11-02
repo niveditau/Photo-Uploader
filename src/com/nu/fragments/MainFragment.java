@@ -21,6 +21,7 @@ public class MainFragment extends Fragment{
 	
 	private static final String TAG = "MainFragment";
 	private UiLifecycleHelper uiHelper;
+	private Button uploadButton;
 	
 	private Session.StatusCallback callback = new Session.StatusCallback() {
 	    @Override
@@ -85,7 +86,8 @@ public class MainFragment extends Fragment{
 	    LoginButton authButton = (LoginButton) view.findViewById(R.id.authButton);
 	    authButton.setFragment(this);
 	    
-	    Button uploadButton = (Button) view.findViewById(R.id.upload_image_button);
+	    uploadButton = (Button) view.findViewById(R.id.upload_image_button);
+	    uploadButton.setEnabled(false);
 	    uploadButton.setOnClickListener(new OnClickListener() {
 			
 			@Override
@@ -100,8 +102,10 @@ public class MainFragment extends Fragment{
 	
 	private void onSessionStateChange(Session session, SessionState state, Exception exception) {
 	    if (state.isOpened()) {
+	    	uploadButton.setEnabled(true);
 	        Log.i(TAG, "Logged in...");
 	    } else if (state.isClosed()) {
+	    	uploadButton.setEnabled(false);
 	        Log.i(TAG, "Logged out...");
 	    }
 	}
