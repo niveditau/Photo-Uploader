@@ -16,6 +16,8 @@ import com.nu.photouploader.R;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -57,7 +59,20 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 
 			@Override
 			public void onClick(View v) {
-				chooseImage();
+				CharSequence colors[] = new CharSequence[] {"Take Photo", "Choose Photo"};
+
+				AlertDialog.Builder builder = new AlertDialog.Builder(ImageUploaderActivity.this);
+				builder.setTitle("Pick an option");
+				
+				builder.setItems(colors, new DialogInterface.OnClickListener() {
+				    @Override
+				    public void onClick(DialogInterface dialog, int which) {
+				        if(which == 1){
+				        	chooseImage();
+				        }
+				    }
+				});
+				builder.show();
 			}
 		});
 		
@@ -73,7 +88,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 			public void onClick(View arg0) {
 
 //				Session.NewPermissionsRequest newPermissionsRequest = new Session
-//					      .NewPermissionsRequest((Activity) arg0.getContext(), Arrays.asList("publish_actions"));
+//					      .NewPermissionsRequest(ImageUploaderActivity.this, Arrays.asList("publish_actions"));
 //				Session session = Session.getActiveSession();
 //					    session.requestNewPublishPermissions(newPermissionsRequest);
 				postPhoto();
@@ -156,6 +171,8 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	                @Override
 	                public void onCompleted(Response response) {
 	                	pbar.setVisibility(View.GONE);
+	                	Intent intent = new Intent(ImageUploaderActivity.this, ImageUploaderActivity.class);
+	    				startActivity(intent);
 	                }
 	            });
 		        

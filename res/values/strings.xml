@@ -8,5 +8,6 @@
     <string name="upload_images">Upload Images</string>
     <string name="title_activity_image_uploader">ImageUploaderActivity</string>
     <string name="upload_to_facebook">Upload To Facebok</string>
+    <string name="title_activity_confirmation">ConfirmationActivity</string>
 
 </resources>

@@ -37,6 +37,10 @@
             android:name="com.nu.photouploader.activities.ImageUploaderActivity"
             android:label="@string/title_activity_image_uploader" >
         </activity>
+        <activity
+            android:name="com.nu.photouploader.ConfirmationActivity"
+            android:label="@string/title_activity_confirmation" >
+        </activity>
     </application>
 
 </manifest>
