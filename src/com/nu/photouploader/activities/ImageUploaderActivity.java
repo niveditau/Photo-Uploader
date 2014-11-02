@@ -143,8 +143,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	
 	private void takePicture() {
 		chooserType = ChooserType.REQUEST_CAPTURE_PICTURE;
-		imageChooserManager = new ImageChooserManager(this,
-				ChooserType.REQUEST_CAPTURE_PICTURE, "myfolder", true);
+		imageChooserManager = new ImageChooserManager(this, ChooserType.REQUEST_CAPTURE_PICTURE, "myfolder", true);
 		imageChooserManager.setImageChooserListener(this);
 		try {
 			pbar.setVisibility(View.VISIBLE);
@@ -211,7 +210,6 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 				if (image != null) {
 					selectedButton.setBackground(Drawable.createFromPath(image.getFilePathOriginal()));
 					handleImageSelection(selectedButton.getId(), image.getFilePathOriginal());
-					//filePaths.add(image.getFilePathOriginal());
 				}
 			}
 		});
