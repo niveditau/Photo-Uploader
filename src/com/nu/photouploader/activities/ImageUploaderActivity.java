@@ -3,9 +3,14 @@ package com.nu.photouploader.activities;
 import java.io.File;
 import java.util.Arrays;
 
+import com.facebook.FacebookAuthorizationException;
+import com.facebook.FacebookOperationCanceledException;
 import com.facebook.Request;
 import com.facebook.Response;
 import com.facebook.Session;
+import com.facebook.UiLifecycleHelper;
+import com.facebook.Session.StatusCallback;
+import com.facebook.SessionState;
 import com.facebook.widget.FacebookDialog;
 import com.kbeanie.imagechooser.api.ChooserType;
 import com.kbeanie.imagechooser.api.ChosenImage;
@@ -48,10 +53,20 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	private int chooserType;
 	
 	private Button uploadToFacebook;
+	private UiLifecycleHelper uiHelper;
+	
+	private Session.StatusCallback callback = new Session.StatusCallback() {
+        @Override
+        public void call(Session session, SessionState state, Exception exception) {
+            onSessionStateChange(session, state, exception);
+        }
+    };
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+	    uiHelper = new UiLifecycleHelper(this, callback);
+	    uiHelper.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_image_uploader);
 		
 		Button buttonChooseImage = (Button) findViewById(R.id.buttonChooseImage);
@@ -89,12 +104,21 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 			
 			@Override
 			public void onClick(View arg0) {
-
-//				Session.NewPermissionsRequest newPermissionsRequest = new Session
-//					      .NewPermissionsRequest(ImageUploaderActivity.this, Arrays.asList("publish_actions"));
-//				Session session = Session.getActiveSession();
-//					    session.requestNewPublishPermissions(newPermissionsRequest);
-				postPhoto();
+				if(!hasPublishPermission()){
+					Session.NewPermissionsRequest newPermissionsRequest = new Session.NewPermissionsRequest(ImageUploaderActivity.this, Arrays.asList("publish_actions"));
+//					newPermissionsRequest.setCallback(new StatusCallback() {
+//						
+//						@Override
+//						public void call(Session session, SessionState state, Exception exception) {
+//							postPhoto();
+//						}
+//					});
+					Session session = Session.getActiveSession();
+					session.requestNewPublishPermissions(newPermissionsRequest);
+				}
+				else {
+					postPhoto();
+				}
 			}
 		});
 	}
@@ -160,6 +184,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		 uiHelper.onActivityResult(requestCode, resultCode, data);
 		if (resultCode == RESULT_OK
 				&& (requestCode == ChooserType.REQUEST_PICK_PICTURE || requestCode == ChooserType.REQUEST_CAPTURE_PICTURE)) {
 			if (imageChooserManager == null) {
@@ -170,6 +195,40 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 			pbar.setVisibility(View.GONE);
 		}
 		
+	}
+	
+	@Override
+	public void onResume() {
+	    super.onResume();
+	    
+	    // For scenarios where the main activity is launched and user
+	    // session is not null, the session state change notification
+	    // may not be triggered. Trigger it if it's open/closed.
+	    Session session = Session.getActiveSession();
+	    if (session != null &&
+	           (session.isOpened() || session.isClosed()) ) {
+	        onSessionStateChange(session, session.getState(), null);
+	    }
+	    
+	    uiHelper.onResume();
+	}
+
+	@Override
+	public void onPause() {
+	    super.onPause();
+	    uiHelper.onPause();
+	}
+
+	@Override
+	public void onDestroy() {
+	    super.onDestroy();
+	    uiHelper.onDestroy();
+	}
+
+	@Override
+	public void onSaveInstanceState(Bundle outState) {
+	    super.onSaveInstanceState(outState);
+	    uiHelper.onSaveInstanceState(outState);
 	}
 	
 	// Should be called if for some reason the ImageChooserManager is null (Due
@@ -185,8 +244,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	        Bitmap image = BitmapFactory.decodeFile(filePath);
 	        pbar.setVisibility(View.VISIBLE);
 	        
-	        //if(hasPublishPermission()){
-	        if(true) {
+	        if(hasPublishPermission()){
 		        Request request = Request.newUploadPhotoRequest(Session.getActiveSession(), image, new Request.Callback() {
 	                @Override
 	                public void onCompleted(Response response) {
@@ -205,19 +263,26 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	        return session != null && session.getPermissions().contains("publish_actions");
 	    }
 		
-		 private void performPublish() {
-		        Session session = Session.getActiveSession();
-		        if (session != null) {
-		            if (hasPublishPermission()) {
-		                postPhoto();
-		                return;
-		            } else if (session.isOpened()) {
-		                // We need to get new permissions, then complete the action when we get called back.
-		                session.requestNewPublishPermissions(new Session.NewPermissionsRequest(this, "publish_actions"));
-		                return;
-		            }
+//		 private void performPublish() {
+//		        Session session = Session.getActiveSession();
+//		        if (session != null) {
+//		            if (hasPublishPermission()) {
+//		                postPhoto();
+//		                return;
+//		            } else if (session.isOpened()) {
+//		                // We need to get new permissions, then complete the action when we get called back.
+//		                session.requestNewPublishPermissions(new Session.NewPermissionsRequest(this, "publish_actions"));
+//		                return;
+//		            }
+//		        }
+//
+//		    }
+//		 
+//		 
+		 private void onSessionStateChange(Session session, SessionState state, Exception exception) {
+		        if (state == SessionState.OPENED_TOKEN_UPDATED) {
+		            postPhoto();
 		        }
-
 		    }
 
 	@Override
