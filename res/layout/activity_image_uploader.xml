@@ -25,10 +25,20 @@
             android:layout_below="@id/imageViewThumbSmall"
             android:text="Choose Image" />
     
-    <Button android:id="@+id/uploadToFacebookButton"
+   
+    
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_below="@id/buttonChooseImage"
+        android:layout_centerHorizontal="true" />
+    
+     <Button android:id="@+id/uploadToFacebookButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/buttonChooseImage"
+        android:layout_below="@id/progressBar"
         android:text="@string/upload_to_facebook"/>
     
 </RelativeLayout>

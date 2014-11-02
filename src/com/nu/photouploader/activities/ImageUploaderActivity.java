@@ -64,6 +64,9 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 		imageViewThumbSmall = (ImageView) findViewById(R.id.imageViewThumbSmall);
 		uploadToFacebook = (Button) findViewById(R.id.uploadToFacebookButton);
 		
+		pbar = (ProgressBar) findViewById(R.id.progressBar);
+		pbar.setVisibility(View.GONE);
+		
 		uploadToFacebook.setOnClickListener(new OnClickListener() {
 			
 			@Override
@@ -85,7 +88,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 				ChooserType.REQUEST_PICK_PICTURE, "myfolder", true);
 		imageChooserManager.setImageChooserListener(this);
 		try {
-			//pbar.setVisibility(View.VISIBLE);
+			pbar.setVisibility(View.VISIBLE);
 			imageChooserManager.choose();
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
@@ -107,7 +110,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 
 			@Override
 			public void run() {
-				//pbar.setVisibility(View.GONE);
+				pbar.setVisibility(View.GONE);
 				if (image != null) {
 					//textViewFile.setText(image.getFilePathOriginal());
 //					imageViewThumbnail.setImageURI(Uri.parse(new File(image
@@ -130,7 +133,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 			}
 			imageChooserManager.submit(requestCode, data);
 		} else {
-			//pbar.setVisibility(View.GONE);
+			pbar.setVisibility(View.GONE);
 		}
 		
 	}
@@ -146,13 +149,13 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 		
 		private void postPhoto() {
 	        Bitmap image = BitmapFactory.decodeFile(filePath);
+	        pbar.setVisibility(View.VISIBLE);
 	        
 	        if(hasPublishPermission()){
 		        Request request = Request.newUploadPhotoRequest(Session.getActiveSession(), image, new Request.Callback() {
 	                @Override
 	                public void onCompleted(Response response) {
-	                	int x = 10;
-	                	int y = x;
+	                	pbar.setVisibility(View.GONE);
 	                }
 	            });
 		        
