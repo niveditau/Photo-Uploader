@@ -3,7 +3,10 @@ package com.nu.photouploader.activities;
 import java.io.File;
 import java.util.Arrays;
 
+import com.facebook.Request;
+import com.facebook.Response;
 import com.facebook.Session;
+import com.facebook.widget.FacebookDialog;
 import com.kbeanie.imagechooser.api.ChooserType;
 import com.kbeanie.imagechooser.api.ChosenImage;
 import com.kbeanie.imagechooser.api.ImageChooserListener;
@@ -14,6 +17,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -41,7 +46,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	private int chooserType;
 	
 	private Button uploadToFacebook;
-
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -64,13 +69,15 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 			@Override
 			public void onClick(View arg0) {
 
-				Session.NewPermissionsRequest newPermissionsRequest = new Session
-					      .NewPermissionsRequest((Activity) arg0.getContext(), Arrays.asList("publish_actions"));
-				Session session = Session.getActiveSession();
-					    session.requestNewPublishPermissions(newPermissionsRequest);
+//				Session.NewPermissionsRequest newPermissionsRequest = new Session
+//					      .NewPermissionsRequest((Activity) arg0.getContext(), Arrays.asList("publish_actions"));
+//				Session session = Session.getActiveSession();
+//					    session.requestNewPublishPermissions(newPermissionsRequest);
+				postPhoto();
 			}
 		});
 	}
+	
 	
 	private void chooseImage() {
 		chooserType = ChooserType.REQUEST_PICK_PICTURE;
@@ -79,7 +86,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 		imageChooserManager.setImageChooserListener(this);
 		try {
 			//pbar.setVisibility(View.VISIBLE);
-			filePath = imageChooserManager.choose();
+			imageChooserManager.choose();
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 		} catch (Exception e) {
@@ -107,9 +114,8 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 //							.getFileThumbnail()).toString()));
 					imageViewThumbSmall.setImageURI(Uri.parse(new File(image
 							.getFileThumbnailSmall()).toString()));
-					String path = image.getFilePathOriginal();
-					String s = path;
-					String t = s;
+					
+					filePath = image.getFilePathOriginal();
 				}
 			}
 		});
@@ -137,6 +143,27 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 			imageChooserManager.setImageChooserListener(this);
 			imageChooserManager.reinitialize(filePath);
 		}
+		
+		private void postPhoto() {
+	        Bitmap image = BitmapFactory.decodeFile(filePath);
+	        
+	        if(hasPublishPermission()){
+		        Request request = Request.newUploadPhotoRequest(Session.getActiveSession(), image, new Request.Callback() {
+	                @Override
+	                public void onCompleted(Response response) {
+	                	int x = 10;
+	                	int y = x;
+	                }
+	            });
+		        
+	            request.executeAsync();
+	        }
+	    }
+		
+		private boolean hasPublishPermission() {
+	        Session session = Session.getActiveSession();
+	        return session != null && session.getPermissions().contains("publish_actions");
+	    }
 
 	@Override
 	public void onError(String reason) {
