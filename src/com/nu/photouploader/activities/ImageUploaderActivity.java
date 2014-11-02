@@ -35,9 +35,7 @@ import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 
 public class ImageUploaderActivity extends Activity implements ImageChooserListener{
 	
@@ -115,9 +113,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 		});
 		
 		uploadToFacebook = (Button) findViewById(R.id.uploadToFacebookButton);
-		
-		pbar = (ProgressBar) findViewById(R.id.progressBar);
-		pbar.setVisibility(View.GONE);
+		enableButton(uploadToFacebook, false, DISABLED_ALPHA);
 		
 		uploadToFacebook.setOnClickListener(new OnClickListener() {
 			
@@ -133,6 +129,9 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 				}
 			}
 		});
+		
+		pbar = (ProgressBar) findViewById(R.id.progressBar);
+		pbar.setVisibility(View.GONE);
 	}
 	
 	@SuppressLint("NewApi")
@@ -149,10 +148,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 		imageChooserManager.setImageChooserListener(this);
 		try {
 			pbar.setVisibility(View.VISIBLE);
-			filePath = imageChooserManager.choose();
-			if(filePath != null){
-				filePaths.add(filePath);
-			}
+			imageChooserManager.choose();
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 		} catch (Exception e) {
@@ -214,30 +210,38 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 				pbar.setVisibility(View.GONE);
 				if (image != null) {
 					selectedButton.setBackground(Drawable.createFromPath(image.getFilePathOriginal()));
-					enableNextButton(selectedButton.getId());
-					filePath = image.getFilePathOriginal();
-					filePaths.add(filePath);
+					handleImageSelection(selectedButton.getId(), image.getFilePathOriginal());
+					//filePaths.add(image.getFilePathOriginal());
 				}
 			}
 		});
 	}
 	
-	private void enableNextButton(int selectedButtonId){
+	private void handleImageSelection(int selectedButtonId, String path){
 		switch(selectedButtonId){
 			case R.id.imageButton1:
+				filePaths.add(0, path);
 				enableButton(imageButton2, true, ENABLED_ALPHA);
+				enableButton(uploadToFacebook, true, ENABLED_ALPHA);
 				break;
 			case R.id.imageButton2:
+				filePaths.add(1, path);
 				enableButton(imageButton3, true, ENABLED_ALPHA);
 				break;
 			case R.id.imageButton3:
+				filePaths.add(2, path);
 				enableButton(imageButton4, true, ENABLED_ALPHA);
 				break;
+			case R.id.imageButton4:
+				filePaths.add(3, path);
+				break;
 			default:
+				filePaths.add(0, path);
 				enableButton(imageButton1, true, ENABLED_ALPHA);
 				break;
 		}
 	}
+	
 	
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -298,6 +302,13 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 		}
 		
 		private void postPhoto() {
+			enableButton(imageButton1, false, DISABLED_ALPHA);
+			enableButton(imageButton2, false, DISABLED_ALPHA);
+			enableButton(imageButton3, false, DISABLED_ALPHA);
+			enableButton(imageButton4, false, DISABLED_ALPHA);
+			
+			enableButton(uploadToFacebook, false, DISABLED_ALPHA);
+			
 	        pbar.setVisibility(View.VISIBLE);
 	        fileCount = filePaths.size();
 	        

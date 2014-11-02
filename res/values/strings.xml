@@ -11,5 +11,8 @@
     <string name="title_activity_confirmation">ConfirmationActivity</string>
     <string name="lets_post_pictures">Let\'s Post Some Pictures!</string>
     <string name="tap_to_add">Tap To add a photo</string>
+    <string name="congrats">!!!Congrats!!!</string>
+    <string name="you_are_done">You\'r done! :D</string>
+    <string name="done">Done</string>
 
 </resources>
