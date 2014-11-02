@@ -33,6 +33,7 @@ public class MainFragment extends Fragment{
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 	    super.onCreate(savedInstanceState);
+	    
 	    uiHelper = new UiLifecycleHelper(getActivity(), callback);
 	    uiHelper.onCreate(savedInstanceState);
 	}
@@ -45,8 +46,7 @@ public class MainFragment extends Fragment{
 	    // session is not null, the session state change notification
 	    // may not be triggered. Trigger it if it's open/closed.
 	    Session session = Session.getActiveSession();
-	    if (session != null &&
-	           (session.isOpened() || session.isClosed()) ) {
+	    if (session != null && (session.isOpened() || session.isClosed()) ) {
 	        onSessionStateChange(session, session.getState(), null);
 	    }
 	    
@@ -78,16 +78,18 @@ public class MainFragment extends Fragment{
 	}
 	
 	@Override
-	public View onCreateView(LayoutInflater inflater, 
-	        ViewGroup container, 
-	        Bundle savedInstanceState) {
+	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 	    View view = inflater.inflate(R.layout.main, container, false);
 	    
+	    // Get the login button
 	    LoginButton authButton = (LoginButton) view.findViewById(R.id.authButton);
 	    authButton.setFragment(this);
 	    
+	    // Get the upload button and disable it initially 
 	    uploadButton = (Button) view.findViewById(R.id.upload_image_button);
 	    uploadButton.setEnabled(false);
+	    
+	    // On upload button click event launch ImageUploaderActivity
 	    uploadButton.setOnClickListener(new OnClickListener() {
 			
 			@Override
@@ -101,6 +103,7 @@ public class MainFragment extends Fragment{
 	}
 	
 	private void onSessionStateChange(Session session, SessionState state, Exception exception) {
+		// On session state change enable/disable upload button appropriately
 	    if (state.isOpened()) {
 	    	uploadButton.setEnabled(true);
 	        Log.i(TAG, "Logged in...");

@@ -16,7 +16,10 @@ public class ConfirmationActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_confirmation);
 		
+		// Get the done button
 		Button done = (Button) findViewById(R.id.done);
+		
+		// When done is clicked finish this activity
 		done.setOnClickListener(new OnClickListener() {
 			
 			@Override

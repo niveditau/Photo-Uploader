@@ -1,21 +1,15 @@
 package com.nu.photouploader.activities;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.facebook.FacebookAuthorizationException;
-import com.facebook.FacebookOperationCanceledException;
 import com.facebook.Request;
 import com.facebook.Response;
 import com.facebook.Session;
 import com.facebook.UiLifecycleHelper;
-import com.facebook.Session.StatusCallback;
 import com.facebook.SessionState;
-import com.facebook.widget.FacebookDialog;
 import com.kbeanie.imagechooser.api.ChooserType;
 import com.kbeanie.imagechooser.api.ChosenImage;
 import com.kbeanie.imagechooser.api.ImageChooserListener;
@@ -23,8 +17,8 @@ import com.kbeanie.imagechooser.api.ImageChooserManager;
 import com.nu.adapters.GridViewAdapter;
 import com.nu.photouploader.R;
 
-import android.net.Uri;
 import android.os.Bundle;
+import android.provider.ContactsContract.CommonDataKinds.Relation;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -37,32 +31,38 @@ import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 
 public class ImageUploaderActivity extends Activity implements ImageChooserListener{
 	
-	private float ENABLED_ALPHA = 1.0f;
-	private float DISABLED_ALPHA = 0.6f;
+	private float ENABLED_ALPHA = 1.0f; // Alpha value of the button when enabled
+	private float DISABLED_ALPHA = 0.6f; // Alpha value of the button when disabled
 	
-	private ImageChooserManager imageChooserManager;
+	// UI elements
 	private Button coverImageButton;
 	private Button imageButton1;
 	private Button imageButton2;
 	private Button imageButton3;
 	private Button imageButton4;
-	private ProgressBar pbar;
+	private Button uploadToFacebook;
+	private Button selectedButton;
+	RelativeLayout progress_overlay;
+	
+	// Utility class variables
+	private ImageChooserManager imageChooserManager;
+	private UiLifecycleHelper uiHelper;
+	private Lock uploadLock = new ReentrantLock();
+	
+	// Others
 	private ArrayList<String> filePaths = new ArrayList<String>();
 	private String filePath;
-	private Button uploadToFacebook;
-	private UiLifecycleHelper uiHelper;
-	private Button selectedButton;
 	private int chooserType;
 	private int fileCount = 0;
-	private Lock downloadLock = new ReentrantLock();
 	
+	// Set a callback on Facebook Session so that we can track session change
 	private Session.StatusCallback callback = new Session.StatusCallback() {
         @Override
         public void call(Session session, SessionState state, Exception exception) {
@@ -73,28 +73,46 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
 	    uiHelper = new UiLifecycleHelper(this, callback);
 	    uiHelper.onCreate(savedInstanceState);
+	    
 		setContentView(R.layout.activity_image_uploader);
 		
+		// Initialize all UI elements
+		initializeUI();
+	}
+	
+	
+	private void initializeUI() {
+		// Get all the UI elements
 		coverImageButton = (Button) findViewById(R.id.coverImageButton);
 		imageButton1 = (Button) findViewById(R.id.imageButton1);
 		imageButton2 = (Button) findViewById(R.id.imageButton2);
 		imageButton3 = (Button) findViewById(R.id.imageButton3);
 		imageButton4 = (Button) findViewById(R.id.imageButton4);
+		uploadToFacebook = (Button) findViewById(R.id.uploadToFacebookButton);
+		progress_overlay = (RelativeLayout) findViewById(R.id.progress_layout);
 		
+		// Disable all the buttons initially except first image button(imageButton1)
 		enableButton(coverImageButton, false, DISABLED_ALPHA);
 		enableButton(imageButton2, false, DISABLED_ALPHA);
 		enableButton(imageButton3, false, DISABLED_ALPHA);
 		enableButton(imageButton4, false, DISABLED_ALPHA);
+		enableButton(uploadToFacebook, false, DISABLED_ALPHA);
+		progress_overlay.setVisibility(View.GONE);
+		
+		/*Set click listeners on all the buttons*/
 		
 		coverImageButton.setOnClickListener(new OnClickListener() {
 			
 			@Override
 			public void onClick(View v) {
-				showAlertDialog();
+				// When coverImageButton is clicked show a dialog with image options
+				showOptionsDialog();
 			}
 		});
+		
 		
 		imageButton1.setOnClickListener(new OnClickListener() {
 			
@@ -103,6 +121,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 				showPhotoSelectionDialog(v);
 			}
 		});
+		
 		
 		imageButton2.setOnClickListener(new OnClickListener() {
 			
@@ -114,11 +133,11 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 		
 		imageButton3.setOnClickListener(new OnClickListener() {
 					
-					@Override
-					public void onClick(View v) {
-						showPhotoSelectionDialog(v);
-					}
-				});
+			@Override
+			public void onClick(View v) {
+				showPhotoSelectionDialog(v);
+			}
+		});
 		
 		imageButton4.setOnClickListener(new OnClickListener() {
 			
@@ -128,27 +147,25 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 			}
 		});
 		
-		uploadToFacebook = (Button) findViewById(R.id.uploadToFacebookButton);
-		enableButton(uploadToFacebook, false, DISABLED_ALPHA);
 		
 		uploadToFacebook.setOnClickListener(new OnClickListener() {
 			
 			@Override
 			public void onClick(View arg0) {
+				// If session doesn't have publish permission then make a request
 				if(!hasPublishPermission()){
-					Session.NewPermissionsRequest newPermissionsRequest = new Session.NewPermissionsRequest(ImageUploaderActivity.this, Arrays.asList("publish_actions"));
+					Session.NewPermissionsRequest newPermissionsRequest = new Session.NewPermissionsRequest(ImageUploaderActivity.this, Arrays.asList(getResources().getString(R.string.publish_actions)));
 					Session session = Session.getActiveSession();
 					session.requestNewPublishPermissions(newPermissionsRequest);
 				}
+				// Else post added photos
 				else {
 					postPhoto();
 				}
 			}
 		});
-		
-		pbar = (ProgressBar) findViewById(R.id.progressBar);
-		pbar.setVisibility(View.GONE);
 	}
+	
 	
 	@SuppressLint("NewApi")
 	private void enableButton(Button button, boolean enable, float alpha){
@@ -162,7 +179,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 		imageChooserManager = new ImageChooserManager(this, ChooserType.REQUEST_CAPTURE_PICTURE, "myfolder", true);
 		imageChooserManager.setImageChooserListener(this);
 		try {
-			pbar.setVisibility(View.VISIBLE);
+			progress_overlay.setVisibility(View.VISIBLE);
 			imageChooserManager.choose();
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
@@ -171,15 +188,17 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 		}
 	}
 	
-	private void showPhotoSelectionDialog(View v){
+	private void showPhotoSelectionDialog(View v) {
+		// set selectedButton to use it later for showing selected image as this button's background
 		selectedButton = (Button) v;
 		
-		CharSequence colors[] = new CharSequence[] {"Take Photo", "Choose Photo"};
+		CharSequence options[] = getResources().getStringArray(R.array.photo_selection_options);
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(ImageUploaderActivity.this);
-		builder.setTitle("Pick an option");
+		builder.setTitle(getResources().getText(R.string.pick_an_option));
 		
-		builder.setItems(colors, new DialogInterface.OnClickListener() {
+		// Based on user selection take the appropriate action
+		builder.setItems(options, new DialogInterface.OnClickListener() {
 		    @Override
 		    public void onClick(DialogInterface dialog, int which) {
 		    	if(which == 0){
@@ -195,11 +214,11 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	
 	private void chooseImage() {
 		chooserType = ChooserType.REQUEST_PICK_PICTURE;
-		imageChooserManager = new ImageChooserManager(this,
-				ChooserType.REQUEST_PICK_PICTURE, "myfolder", true);
+		imageChooserManager = new ImageChooserManager(this, ChooserType.REQUEST_PICK_PICTURE, getResources().getString(R.string.photo_uploader), true);
 		imageChooserManager.setImageChooserListener(this);
 		try {
-			pbar.setVisibility(View.VISIBLE);
+			// While user is choosing the photo show progress bar
+		progress_overlay.setVisibility(View.VISIBLE);
 			imageChooserManager.choose();
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
@@ -222,10 +241,15 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 			@SuppressLint("NewApi")
 			@Override
 			public void run() {
-				pbar.setVisibility(View.GONE);
+				// Once we get the image selected by user hide the progress bar
+				// and if image is not 
+				progress_overlay.setVisibility(View.GONE);
 				if (image != null) {
 					selectedButton.setBackground(Drawable.createFromPath(image.getFilePathOriginal()));
 					handleImageSelection(selectedButton.getId(), image.getFilePathOriginal());
+				}
+				else{
+					new AlertDialog.Builder(ImageUploaderActivity.this).setTitle(R.string.error_title).setMessage(R.string.photo_selection_error_message).setPositiveButton(R.string.ok, null).show();
 				}
 			}
 		});
@@ -233,26 +257,38 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	
 	@SuppressLint("NewApi")
 	private void handleImageSelection(int selectedButtonId, String path){
+		// When user selects a photo add the path to list and enable next button
 		switch(selectedButtonId){
 			case R.id.imageButton1:
+				// Add file path to the list
 				filePaths.add(0, path);
+				
+				// On first photo selection enable coverImageButton and enable it
 				coverImageButton.setBackground(Drawable.createFromPath(path));
 				enableButton(coverImageButton, true, ENABLED_ALPHA);
+				
+				// Enable next button to add photo
 				enableButton(imageButton2, true, ENABLED_ALPHA);
+				
+				// Enable uploadToFacebook button
 				enableButton(uploadToFacebook, true, ENABLED_ALPHA);
 				break;
 			case R.id.imageButton2:
+				// Add file path to the list and enable next add button
 				filePaths.add(1, path);
 				enableButton(imageButton3, true, ENABLED_ALPHA);
 				break;
 			case R.id.imageButton3:
+				// Add file path to the list and enable next add button
 				filePaths.add(2, path);
 				enableButton(imageButton4, true, ENABLED_ALPHA);
 				break;
 			case R.id.imageButton4:
+				// Add file path to the list and enable next add button
 				filePaths.add(3, path);
 				break;
 			default:
+				// Add file path to the list and enable next add button
 				filePaths.add(0, path);
 				enableButton(imageButton1, true, ENABLED_ALPHA);
 				break;
@@ -263,14 +299,16 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		 uiHelper.onActivityResult(requestCode, resultCode, data);
-		if (resultCode == RESULT_OK
-				&& (requestCode == ChooserType.REQUEST_PICK_PICTURE || requestCode == ChooserType.REQUEST_CAPTURE_PICTURE)) {
+		 
+		if (resultCode == RESULT_OK && (requestCode == ChooserType.REQUEST_PICK_PICTURE || requestCode == ChooserType.REQUEST_CAPTURE_PICTURE)) {
 			if (imageChooserManager == null) {
 				reinitializeImageChooser();
 			}
+			
+			// Submit the data to imageChooserManager
 			imageChooserManager.submit(requestCode, data);
 		} else {
-			pbar.setVisibility(View.GONE);
+			progress_overlay.setVisibility(View.GONE);
 		}
 		
 	}
@@ -283,8 +321,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	    // session is not null, the session state change notification
 	    // may not be triggered. Trigger it if it's open/closed.
 	    Session session = Session.getActiveSession();
-	    if (session != null &&
-	           (session.isOpened() || session.isClosed()) ) {
+	    if (session != null && (session.isOpened() || session.isClosed()) ) {
 	        onSessionStateChange(session, session.getState(), null);
 	    }
 	    
@@ -310,90 +347,125 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	}
 	
 	// Should be called if for some reason the ImageChooserManager is null (Due
-		// to destroying of activity for low memory situations)
-		private void reinitializeImageChooser() {
-			imageChooserManager = new ImageChooserManager(this, chooserType,
-					"myfolder", true);
-			imageChooserManager.setImageChooserListener(this);
-			imageChooserManager.reinitialize(filePath);
+	// to destroying of activity for low memory situations)
+	private void reinitializeImageChooser() {
+		imageChooserManager = new ImageChooserManager(this, chooserType, getResources().getString(R.string.photo_uploader), true);
+		imageChooserManager.setImageChooserListener(this);
+		imageChooserManager.reinitialize(filePath);
+	}
+		
+	private void postPhoto() {
+		// Show the progress_overlay while photo upload is in progress
+		progress_overlay.setVisibility(View.VISIBLE);
+        
+        // Get the count of all the photos that needs to be uploaded
+        fileCount = filePaths.size();
+        
+        // Iterate over the list of photos and make the upload request
+        for (String file : filePaths) {
+        	// Create bitmap from the image file path
+        	Bitmap image = BitmapFactory.decodeFile(file);
+        	
+        	// Check if session has permission to publish
+	        if(hasPublishPermission()){
+	        	
+	        	// Make the upload photo request and pass it the bitmap to be uploaded
+		        Request request = Request.newUploadPhotoRequest(Session.getActiveSession(), image, new Request.Callback() {
+	                @Override
+	                public void onCompleted(Response response) {
+	                	
+	                	// When a photo upload is completed start the lock so that callback for each
+	                	// photo upload request can be handled without any race condition
+	                	uploadLock.lock();
+	                	try {
+	                		
+		                	// Make sure there was no error in uploading photos
+		                	if(response != null && response.getError() == null){
+			                		// Decrement the file count to keep track how many responses have been received
+				                	fileCount--;
+				                	
+				                	// Check if all the responses have been received
+				                	if(fileCount == 0){
+					                	progress_overlay.setVisibility(View.GONE);
+					                	
+					                	// Navigate user to the upload confirmation activity
+					                	Intent intent = new Intent(ImageUploaderActivity.this, ConfirmationActivity.class);
+					    				startActivity(intent);
+					    				finish();
+				                	}
+			                	
+			                	
+			                }else{
+			                	new AlertDialog.Builder(ImageUploaderActivity.this)
+			                				   .setTitle(R.string.error_title)
+			                				   .setMessage(response.getError().getErrorMessage() + getResources().getString(R.string.error_message))
+			                				   .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+												
+													public void onClick(DialogInterface dialog, int which) {
+														// Let the user try again
+														progress_overlay.setVisibility(View.GONE);
+													}
+												})
+			                				   .show();
+			                }
+	                	} finally {
+	                		uploadLock.unlock();
+	                	}
+		             }
+	            });
+		        
+	            request.executeAsync();
+	        }
 		}
+    }
+	
 		
-		private void postPhoto() {
-			enableButton(coverImageButton, false, DISABLED_ALPHA);
-			enableButton(imageButton1, false, DISABLED_ALPHA);
-			enableButton(imageButton2, false, DISABLED_ALPHA);
-			enableButton(imageButton3, false, DISABLED_ALPHA);
-			enableButton(imageButton4, false, DISABLED_ALPHA);
-			
-			enableButton(uploadToFacebook, false, DISABLED_ALPHA);
-			
-	        pbar.setVisibility(View.VISIBLE);
-	        fileCount = filePaths.size();
-	        
-	        for (String file : filePaths) {
-	        	Bitmap image = BitmapFactory.decodeFile(file);
-
-		        if(hasPublishPermission()){
-			        Request request = Request.newUploadPhotoRequest(Session.getActiveSession(), image, new Request.Callback() {
-		                @Override
-		                public void onCompleted(Response response) {
-		                	downloadLock.lock();
-		                	try {
-		                	fileCount--;
-		                	
-		                	if(fileCount == 0){
-			                	pbar.setVisibility(View.GONE);
-			                	Intent intent = new Intent(ImageUploaderActivity.this, ConfirmationActivity.class);
-			    				startActivity(intent);
-			    				finish();
-		                	}
-		                	} finally {
-		                	downloadLock.unlock();
-		                	}
-		                	
-		                }
-		            });
-			        
-		            request.executeAsync();
-		        }
-			}
-	    }
-		
-		private boolean hasPublishPermission() {
-	        Session session = Session.getActiveSession();
-	        return session != null && session.getPermissions().contains("publish_actions");
-	    }
-		 
-		 private void onSessionStateChange(Session session, SessionState state, Exception exception) {
-		        if (state == SessionState.OPENED_TOKEN_UPDATED) {
-		            postPhoto();
-		        }
-		    }
+	private boolean hasPublishPermission() {
+		// Check if session has the publish permission
+        Session session = Session.getActiveSession();
+        return session != null && session.getPermissions().contains("publish_actions");
+    }
+	
+	
+	private void onSessionStateChange(Session session, SessionState state, Exception exception) {
+		// Handle session state change
+        if (state == SessionState.OPENED_TOKEN_UPDATED) {
+            postPhoto();
+        }
+	}
 
 	@Override
 	public void onError(String reason) {
-		// TODO Auto-generated method stub
-		
+		new AlertDialog.Builder(ImageUploaderActivity.this).setTitle(R.string.error_title).setMessage(R.string.photo_selection_error_message).setPositiveButton(R.string.ok, null).show();
 	}
 	
-	private void showAlertDialog() {
+	private void showOptionsDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         final AlertDialog optionDialog = builder.create();
+        
+        // Create a new grid view to display in the dialog
         GridView gridView = new GridView(this);
-
+        
+        // Set an adapter that will populate the images in the grid view
         gridView.setAdapter(new GridViewAdapter(ImageUploaderActivity.this, filePaths));
+        
+        // Set the number of columns in grid view
         gridView.setNumColumns(2);
+        
+        // Set listener for grid view item click event
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @SuppressLint("NewApi")
 			@Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            	// Hide the dialog
             	optionDialog.dismiss();
+            	
+            	// Show the selected image on cover image button
             	coverImageButton.setBackground(Drawable.createFromPath(filePaths.get(position)));
             }
         });
         optionDialog.setView(gridView);
-        optionDialog.setTitle("Select cover photo");
+        optionDialog.setTitle(getResources().getString(R.string.select_cover_photo));
         optionDialog.show();
     }
-
 }
