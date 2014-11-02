@@ -1,7 +1,10 @@
 package com.nu.photouploader.activities;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import com.facebook.FacebookAuthorizationException;
 import com.facebook.FacebookOperationCanceledException;
@@ -41,24 +44,20 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	private float ENABLED_ALPHA = 1.0f;
 	private float DISABLED_ALPHA = 0.6f;
 	
+	private ImageChooserManager imageChooserManager;
 	private Button imageButton1;
 	private Button imageButton2;
 	private Button imageButton3;
 	private Button imageButton4;
-
-	private ImageChooserManager imageChooserManager;
-
 	private ProgressBar pbar;
-
-	//private AdView adView;
-
+	private ArrayList<String> filePaths = new ArrayList<String>();
 	private String filePath;
-
-	private int chooserType;
-	
 	private Button uploadToFacebook;
 	private UiLifecycleHelper uiHelper;
 	private Button selectedButton;
+	private int chooserType;
+	private int fileCount = 0;
+	private Lock downloadLock = new ReentrantLock();
 	
 	private Session.StatusCallback callback = new Session.StatusCallback() {
         @Override
@@ -151,6 +150,9 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 		try {
 			pbar.setVisibility(View.VISIBLE);
 			filePath = imageChooserManager.choose();
+			if(filePath != null){
+				filePaths.add(filePath);
+			}
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 		} catch (Exception e) {
@@ -214,6 +216,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 					selectedButton.setBackground(Drawable.createFromPath(image.getFilePathOriginal()));
 					enableNextButton(selectedButton.getId());
 					filePath = image.getFilePathOriginal();
+					filePaths.add(filePath);
 				}
 			}
 		});
@@ -295,21 +298,36 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 		}
 		
 		private void postPhoto() {
-	        Bitmap image = BitmapFactory.decodeFile(filePath);
 	        pbar.setVisibility(View.VISIBLE);
+	        fileCount = filePaths.size();
 	        
-	        if(hasPublishPermission()){
-		        Request request = Request.newUploadPhotoRequest(Session.getActiveSession(), image, new Request.Callback() {
-	                @Override
-	                public void onCompleted(Response response) {
-	                	pbar.setVisibility(View.GONE);
-	                	Intent intent = new Intent(ImageUploaderActivity.this, ConfirmationActivity.class);
-	    				startActivity(intent);
-	                }
-	            });
-		        
-	            request.executeAsync();
-	        }
+	        for (String file : filePaths) {
+	        	Bitmap image = BitmapFactory.decodeFile(file);
+
+		        if(hasPublishPermission()){
+			        Request request = Request.newUploadPhotoRequest(Session.getActiveSession(), image, new Request.Callback() {
+		                @Override
+		                public void onCompleted(Response response) {
+		                	downloadLock.lock();
+		                	try {
+		                	fileCount--;
+		                	
+		                	if(fileCount == 0){
+			                	pbar.setVisibility(View.GONE);
+			                	Intent intent = new Intent(ImageUploaderActivity.this, ConfirmationActivity.class);
+			    				startActivity(intent);
+			    				finish();
+		                	}
+		                	} finally {
+		                	downloadLock.unlock();
+		                	}
+		                	
+		                }
+		            });
+			        
+		            request.executeAsync();
+		        }
+			}
 	    }
 		
 		private boolean hasPublishPermission() {
