@@ -3,6 +3,7 @@ package com.nu.photouploader.activities;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -19,6 +20,7 @@ import com.kbeanie.imagechooser.api.ChooserType;
 import com.kbeanie.imagechooser.api.ChosenImage;
 import com.kbeanie.imagechooser.api.ImageChooserListener;
 import com.kbeanie.imagechooser.api.ImageChooserManager;
+import com.nu.adapters.GridViewAdapter;
 import com.nu.photouploader.R;
 
 import android.net.Uri;
@@ -34,7 +36,10 @@ import android.graphics.drawable.Drawable;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.GridView;
 import android.widget.ProgressBar;
 
 public class ImageUploaderActivity extends Activity implements ImageChooserListener{
@@ -43,6 +48,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	private float DISABLED_ALPHA = 0.6f;
 	
 	private ImageChooserManager imageChooserManager;
+	private Button coverImageButton;
 	private Button imageButton1;
 	private Button imageButton2;
 	private Button imageButton3;
@@ -71,14 +77,24 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	    uiHelper.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_image_uploader);
 		
+		coverImageButton = (Button) findViewById(R.id.coverImageButton);
 		imageButton1 = (Button) findViewById(R.id.imageButton1);
 		imageButton2 = (Button) findViewById(R.id.imageButton2);
 		imageButton3 = (Button) findViewById(R.id.imageButton3);
 		imageButton4 = (Button) findViewById(R.id.imageButton4);
 		
+		enableButton(coverImageButton, false, DISABLED_ALPHA);
 		enableButton(imageButton2, false, DISABLED_ALPHA);
 		enableButton(imageButton3, false, DISABLED_ALPHA);
 		enableButton(imageButton4, false, DISABLED_ALPHA);
+		
+		coverImageButton.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				showAlertDialog();
+			}
+		});
 		
 		imageButton1.setOnClickListener(new OnClickListener() {
 			
@@ -215,10 +231,13 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 		});
 	}
 	
+	@SuppressLint("NewApi")
 	private void handleImageSelection(int selectedButtonId, String path){
 		switch(selectedButtonId){
 			case R.id.imageButton1:
 				filePaths.add(0, path);
+				coverImageButton.setBackground(Drawable.createFromPath(path));
+				enableButton(coverImageButton, true, ENABLED_ALPHA);
 				enableButton(imageButton2, true, ENABLED_ALPHA);
 				enableButton(uploadToFacebook, true, ENABLED_ALPHA);
 				break;
@@ -300,6 +319,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 		}
 		
 		private void postPhoto() {
+			enableButton(coverImageButton, false, DISABLED_ALPHA);
 			enableButton(imageButton1, false, DISABLED_ALPHA);
 			enableButton(imageButton2, false, DISABLED_ALPHA);
 			enableButton(imageButton3, false, DISABLED_ALPHA);
@@ -355,5 +375,25 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 		// TODO Auto-generated method stub
 		
 	}
+	
+	private void showAlertDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        final AlertDialog optionDialog = builder.create();
+        GridView gridView = new GridView(this);
+
+        gridView.setAdapter(new GridViewAdapter(ImageUploaderActivity.this, filePaths));
+        gridView.setNumColumns(2);
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @SuppressLint("NewApi")
+			@Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            	optionDialog.dismiss();
+            	coverImageButton.setBackground(Drawable.createFromPath(filePaths.get(position)));
+            }
+        });
+        optionDialog.setView(gridView);
+        optionDialog.setTitle("Select cover photo");
+        optionDialog.show();
+    }
 
 }
