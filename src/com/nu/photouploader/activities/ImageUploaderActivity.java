@@ -20,12 +20,14 @@ import com.nu.photouploader.R;
 
 import android.net.Uri;
 import android.os.Bundle;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -36,11 +38,13 @@ import android.widget.TextView;
 
 public class ImageUploaderActivity extends Activity implements ImageChooserListener{
 	
-	private ImageView imageViewThumbnail;
-
-	private ImageView imageViewThumbSmall;
-
-	private TextView textViewFile;
+	private float ENABLED_ALPHA = 1.0f;
+	private float DISABLED_ALPHA = 0.6f;
+	
+	private Button imageButton1;
+	private Button imageButton2;
+	private Button imageButton3;
+	private Button imageButton4;
 
 	private ImageChooserManager imageChooserManager;
 
@@ -54,6 +58,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	
 	private Button uploadToFacebook;
 	private UiLifecycleHelper uiHelper;
+	private Button selectedButton;
 	
 	private Session.StatusCallback callback = new Session.StatusCallback() {
         @Override
@@ -69,32 +74,47 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	    uiHelper.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_image_uploader);
 		
-		Button buttonChooseImage = (Button) findViewById(R.id.buttonChooseImage);
-		buttonChooseImage.setOnClickListener(new OnClickListener() {
-
+		imageButton1 = (Button) findViewById(R.id.imageButton1);
+		imageButton2 = (Button) findViewById(R.id.imageButton2);
+		imageButton3 = (Button) findViewById(R.id.imageButton3);
+		imageButton4 = (Button) findViewById(R.id.imageButton4);
+		
+		enableButton(imageButton2, false, DISABLED_ALPHA);
+		enableButton(imageButton3, false, DISABLED_ALPHA);
+		enableButton(imageButton4, false, DISABLED_ALPHA);
+		
+		imageButton1.setOnClickListener(new OnClickListener() {
+			
 			@Override
 			public void onClick(View v) {
-				CharSequence colors[] = new CharSequence[] {"Take Photo", "Choose Photo"};
-
-				AlertDialog.Builder builder = new AlertDialog.Builder(ImageUploaderActivity.this);
-				builder.setTitle("Pick an option");
-				
-				builder.setItems(colors, new DialogInterface.OnClickListener() {
-				    @Override
-				    public void onClick(DialogInterface dialog, int which) {
-				    	if(which == 0){
-				    		takePicture();
-				    	}
-				    	else if(which == 1){
-				        	chooseImage();
-				        }
-				    }
-				});
-				builder.show();
+				showPhotoSelectionDialog(v);
 			}
 		});
 		
-		imageViewThumbSmall = (ImageView) findViewById(R.id.imageViewThumbSmall);
+		imageButton2.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				showPhotoSelectionDialog(v);
+			}
+		});
+		
+		imageButton3.setOnClickListener(new OnClickListener() {
+					
+					@Override
+					public void onClick(View v) {
+						showPhotoSelectionDialog(v);
+					}
+				});
+		
+		imageButton4.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				showPhotoSelectionDialog(v);
+			}
+		});
+		
 		uploadToFacebook = (Button) findViewById(R.id.uploadToFacebookButton);
 		
 		pbar = (ProgressBar) findViewById(R.id.progressBar);
@@ -106,13 +126,6 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 			public void onClick(View arg0) {
 				if(!hasPublishPermission()){
 					Session.NewPermissionsRequest newPermissionsRequest = new Session.NewPermissionsRequest(ImageUploaderActivity.this, Arrays.asList("publish_actions"));
-//					newPermissionsRequest.setCallback(new StatusCallback() {
-//						
-//						@Override
-//						public void call(Session session, SessionState state, Exception exception) {
-//							postPhoto();
-//						}
-//					});
 					Session session = Session.getActiveSession();
 					session.requestNewPublishPermissions(newPermissionsRequest);
 				}
@@ -121,6 +134,12 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 				}
 			}
 		});
+	}
+	
+	@SuppressLint("NewApi")
+	private void enableButton(Button button, boolean enable, float alpha){
+		button.setEnabled(enable);
+		button.setAlpha(alpha);
 	}
 	
 	
@@ -139,6 +158,27 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 		}
 	}
 	
+	private void showPhotoSelectionDialog(View v){
+		selectedButton = (Button) v;
+		
+		CharSequence colors[] = new CharSequence[] {"Take Photo", "Choose Photo"};
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(ImageUploaderActivity.this);
+		builder.setTitle("Pick an option");
+		
+		builder.setItems(colors, new DialogInterface.OnClickListener() {
+		    @Override
+		    public void onClick(DialogInterface dialog, int which) {
+		    	if(which == 0){
+		    		takePicture();
+		    	}
+		    	else if(which == 1){
+		        	chooseImage();
+		        }
+		    }
+		});
+		builder.show();
+	}
 	
 	private void chooseImage() {
 		chooserType = ChooserType.REQUEST_PICK_PICTURE;
@@ -166,20 +206,34 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	public void onImageChosen(final ChosenImage image) {
 		runOnUiThread(new Runnable() {
 
+			@SuppressLint("NewApi")
 			@Override
 			public void run() {
 				pbar.setVisibility(View.GONE);
 				if (image != null) {
-					//textViewFile.setText(image.getFilePathOriginal());
-//					imageViewThumbnail.setImageURI(Uri.parse(new File(image
-//							.getFileThumbnail()).toString()));
-					imageViewThumbSmall.setImageURI(Uri.parse(new File(image
-							.getFileThumbnailSmall()).toString()));
-					
+					selectedButton.setBackground(Drawable.createFromPath(image.getFilePathOriginal()));
+					enableNextButton(selectedButton.getId());
 					filePath = image.getFilePathOriginal();
 				}
 			}
 		});
+	}
+	
+	private void enableNextButton(int selectedButtonId){
+		switch(selectedButtonId){
+			case R.id.imageButton1:
+				enableButton(imageButton2, true, ENABLED_ALPHA);
+				break;
+			case R.id.imageButton2:
+				enableButton(imageButton3, true, ENABLED_ALPHA);
+				break;
+			case R.id.imageButton3:
+				enableButton(imageButton4, true, ENABLED_ALPHA);
+				break;
+			default:
+				enableButton(imageButton1, true, ENABLED_ALPHA);
+				break;
+		}
 	}
 	
 	@Override
@@ -249,7 +303,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	                @Override
 	                public void onCompleted(Response response) {
 	                	pbar.setVisibility(View.GONE);
-	                	Intent intent = new Intent(ImageUploaderActivity.this, ImageUploaderActivity.class);
+	                	Intent intent = new Intent(ImageUploaderActivity.this, ConfirmationActivity.class);
 	    				startActivity(intent);
 	                }
 	            });
@@ -262,23 +316,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	        Session session = Session.getActiveSession();
 	        return session != null && session.getPermissions().contains("publish_actions");
 	    }
-		
-//		 private void performPublish() {
-//		        Session session = Session.getActiveSession();
-//		        if (session != null) {
-//		            if (hasPublishPermission()) {
-//		                postPhoto();
-//		                return;
-//		            } else if (session.isOpened()) {
-//		                // We need to get new permissions, then complete the action when we get called back.
-//		                session.requestNewPublishPermissions(new Session.NewPermissionsRequest(this, "publish_actions"));
-//		                return;
-//		            }
-//		        }
-//
-//		    }
-//		 
-//		 
+		 
 		 private void onSessionStateChange(Session session, SessionState state, Exception exception) {
 		        if (state == SessionState.OPENED_TOKEN_UPDATED) {
 		            postPhoto();

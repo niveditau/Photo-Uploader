@@ -8,37 +8,114 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".ImageUploaderActivity" >
     
-    <ImageView
-        android:id="@+id/imageViewThumbSmall"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+    <TextView 
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="10dp"
-        android:padding="10dp"
-        android:scaleType="fitCenter"
-        android:src="@drawable/ic_launcher" />
-
-    <Button
-            android:id="@+id/buttonChooseImage"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/imageViewThumbSmall"
-            android:text="Choose Image" />
+        android:text="@string/lets_post_pictures"/>
     
-   
+    
+    <LinearLayout 
+        android:id="@+id/buttonContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_centerInParent="true"
+        android:layout_centerHorizontal="true">
+        
+        <View
+	        android:layout_width="0dp"
+	        android:layout_height="1dp"
+	        android:layout_weight="1" >
+	    </View>
+        
+        <Button
+	        android:id="@+id/imageButton1"
+	        android:layout_width="50dp"
+	        android:layout_height="50dp"
+	        android:layout_marginTop="10dp"
+	        android:padding="10dp"
+	        android:scaleType="fitCenter"
+	        android:background="@drawable/add_button"
+	        android:src="@drawable/ic_launcher" />
+        
+        <View
+	        android:layout_width="0dp"
+	        android:layout_height="1dp"
+	        android:layout_weight="1" >
+	    </View>
+        
+        <Button
+	        android:id="@+id/imageButton2"
+	        android:layout_width="50dp"
+	        android:layout_height="50dp"
+	        android:layout_marginTop="10dp"
+	        android:padding="10dp"
+	        android:scaleType="fitCenter"
+	        android:background="@drawable/add_button"
+	        android:src="@drawable/ic_launcher" />
+	        
+        <View
+	        android:layout_width="0dp"
+	        android:layout_height="1dp"
+	        android:layout_weight="1" >
+	    </View>
+        
+        <Button
+	        android:id="@+id/imageButton3"
+	        android:layout_width="50dp"
+	        android:layout_height="50dp"
+	        android:layout_marginTop="10dp"
+	        android:padding="10dp"
+	        android:scaleType="fitCenter"
+	        android:background="@drawable/add_button"
+	        android:src="@drawable/ic_launcher" />
+        
+        <View
+	        android:layout_width="0dp"
+	        android:layout_height="1dp"
+	        android:layout_weight="1" >
+	    </View>
+        
+        <Button
+	        android:id="@+id/imageButton4"
+	        android:layout_width="50dp"
+	        android:layout_height="50dp"
+	        android:layout_marginTop="10dp"
+	        android:padding="10dp"
+	        android:scaleType="fitCenter"
+	        android:background="@drawable/add_button"
+	        android:src="@drawable/ic_launcher" />
+        
+        <View
+	        android:layout_width="0dp"
+	        android:layout_height="1dp"
+	        android:layout_weight="1" >
+	    </View>
+        
+    </LinearLayout>
+    
+    <TextView 
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/buttonContainer"
+        android:layout_marginLeft="20dp"
+        android:text="@string/tap_to_add"/>
     
     <ProgressBar
         android:id="@+id/progressBar"
         style="?android:attr/progressBarStyleLarge"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:layout_below="@id/buttonChooseImage"
+        android:layout_above="@id/buttonContainer"
+        android:layout_marginBottom="20dp"
         android:layout_centerHorizontal="true" />
     
      <Button android:id="@+id/uploadToFacebookButton"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/progressBar"
+        android:layout_alignParentBottom="true"
         android:text="@string/upload_to_facebook"/>
     
 </RelativeLayout>

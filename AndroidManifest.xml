@@ -40,7 +40,7 @@
             android:screenOrientation="portrait" >
         </activity>
         <activity
-            android:name="com.nu.photouploader.ConfirmationActivity"
+            android:name="com.nu.photouploader.activities.ConfirmationActivity"
             android:label="@string/title_activity_confirmation"
             android:screenOrientation="portrait" >
         </activity>
