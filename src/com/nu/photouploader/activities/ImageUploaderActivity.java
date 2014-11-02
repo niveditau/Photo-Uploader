@@ -67,7 +67,10 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 				builder.setItems(colors, new DialogInterface.OnClickListener() {
 				    @Override
 				    public void onClick(DialogInterface dialog, int which) {
-				        if(which == 1){
+				    	if(which == 0){
+				    		takePicture();
+				    	}
+				    	else if(which == 1){
 				        	chooseImage();
 				        }
 				    }
@@ -94,6 +97,22 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 				postPhoto();
 			}
 		});
+	}
+	
+	
+	private void takePicture() {
+		chooserType = ChooserType.REQUEST_CAPTURE_PICTURE;
+		imageChooserManager = new ImageChooserManager(this,
+				ChooserType.REQUEST_CAPTURE_PICTURE, "myfolder", true);
+		imageChooserManager.setImageChooserListener(this);
+		try {
+			pbar.setVisibility(View.VISIBLE);
+			filePath = imageChooserManager.choose();
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	
