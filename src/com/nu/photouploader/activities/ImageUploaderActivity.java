@@ -185,7 +185,8 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	        Bitmap image = BitmapFactory.decodeFile(filePath);
 	        pbar.setVisibility(View.VISIBLE);
 	        
-	        if(hasPublishPermission()){
+	        //if(hasPublishPermission()){
+	        if(true) {
 		        Request request = Request.newUploadPhotoRequest(Session.getActiveSession(), image, new Request.Callback() {
 	                @Override
 	                public void onCompleted(Response response) {
@@ -203,6 +204,21 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	        Session session = Session.getActiveSession();
 	        return session != null && session.getPermissions().contains("publish_actions");
 	    }
+		
+		 private void performPublish() {
+		        Session session = Session.getActiveSession();
+		        if (session != null) {
+		            if (hasPublishPermission()) {
+		                postPhoto();
+		                return;
+		            } else if (session.isOpened()) {
+		                // We need to get new permissions, then complete the action when we get called back.
+		                session.requestNewPublishPermissions(new Session.NewPermissionsRequest(this, "publish_actions"));
+		                return;
+		            }
+		        }
+
+		    }
 
 	@Override
 	public void onError(String reason) {
