@@ -55,7 +55,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	private UiLifecycleHelper uiHelper;
 	private Lock uploadLock = new ReentrantLock();
 	
-	// Others
+	// Other variables
 	private ArrayList<String> filePaths = new ArrayList<String>();
 	private String filePath;
 	private int chooserType;
@@ -217,7 +217,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 		imageChooserManager.setImageChooserListener(this);
 		try {
 			// While user is choosing the photo show progress bar
-		progress_overlay.setVisibility(View.VISIBLE);
+		    progress_overlay.setVisibility(View.VISIBLE);
 			imageChooserManager.choose();
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
@@ -241,7 +241,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 			@Override
 			public void run() {
 				// Once we get the image selected by user hide the progress bar
-				// and if image is not 
+				// and if image is not null, show it on the image tile
 				progress_overlay.setVisibility(View.GONE);
 				if (image != null) {
 					selectedButton.setImageDrawable(Drawable.createFromPath(image.getFilePathOriginal()));
@@ -373,8 +373,9 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	                @Override
 	                public void onCompleted(Response response) {
 	                	
-	                	// When a photo upload is completed start the lock so that callback for each
-	                	// photo upload request can be handled without any race condition
+	                	// When a photo upload is completed acquire the lock so that callback for each
+	                	// photo upload request logic that depends on counting how many uploads have finished
+	                	// does not hit an error condition
 	                	uploadLock.lock();
 	                	try {
 	                		
@@ -399,7 +400,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 			                }else{
 			                	new AlertDialog.Builder(ImageUploaderActivity.this)
 			                				   .setTitle(R.string.error_title)
-			                				   .setMessage(response.getError().getErrorMessage() + getResources().getString(R.string.error_message))
+			                				   .setMessage(response.getError().getErrorMessage() + " " + getResources().getString(R.string.error_message))
 			                				   .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
 												
 													public void onClick(DialogInterface dialog, int which) {
