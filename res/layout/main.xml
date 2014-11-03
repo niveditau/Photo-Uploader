@@ -8,6 +8,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
+        android:layout_marginTop="@dimen/activity_vertical_margin"
+        android:textSize="@dimen/header_text_font_size"
         android:text="@string/offer_up_challenge"/>
 
     <com.facebook.widget.LoginButton
@@ -15,14 +17,18 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="100dp"/>
+        android:layout_marginTop="@dimen/login_button_margin_top"/>
     
     <Button 
         android:id="@+id/upload_image_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="@dimen/upload_button_margin_top"
+        android:layout_marginRight="@dimen/activity_horizontal_margin"
+        android:layout_marginLeft="@dimen/activity_horizontal_margin"
+        android:padding="@dimen/activity_vertical_padding"
+        android:textSize="@dimen/header_text_font_size"
         android:text="@string/upload_images"/>
 
 </LinearLayout>

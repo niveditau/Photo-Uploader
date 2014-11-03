@@ -13,20 +13,24 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_alignParentTop="true"
+        android:textSize="@dimen/header_text_font_size"
         android:text="@string/congrats" />
     
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
+        android:textSize="@dimen/header_text_font_size"
         android:text="@string/you_are_done" />
     
     <Button 
         android:id="@+id/done"
-        android:layout_width="wrap_content"
+        android:layout_width="@dimen/done_button_width"
         android:layout_height="wrap_content"
+        android:padding="@dimen/activity_horizontal_padding"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
+        android:textSize="@dimen/header_text_font_size"
         android:text="@string/done"/>
 
 </RelativeLayout>
