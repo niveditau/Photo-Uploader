@@ -18,7 +18,6 @@ import com.nu.adapters.GridViewAdapter;
 import com.nu.photouploader.R;
 
 import android.os.Bundle;
-import android.provider.ContactsContract.CommonDataKinds.Relation;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -33,7 +32,7 @@ import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.GridView;
-import android.widget.ProgressBar;
+import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 
 public class ImageUploaderActivity extends Activity implements ImageChooserListener{
@@ -42,13 +41,13 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	private float DISABLED_ALPHA = 0.6f; // Alpha value of the button when disabled
 	
 	// UI elements
-	private Button coverImageButton;
-	private Button imageButton1;
-	private Button imageButton2;
-	private Button imageButton3;
-	private Button imageButton4;
+	private ImageButton coverImageButton;
+	private ImageButton imageButton1;
+	private ImageButton imageButton2;
+	private ImageButton imageButton3;
+	private ImageButton imageButton4;
+	private ImageButton selectedButton;
 	private Button uploadToFacebook;
-	private Button selectedButton;
 	RelativeLayout progress_overlay;
 	
 	// Utility class variables
@@ -86,11 +85,11 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	
 	private void initializeUI() {
 		// Get all the UI elements
-		coverImageButton = (Button) findViewById(R.id.coverImageButton);
-		imageButton1 = (Button) findViewById(R.id.imageButton1);
-		imageButton2 = (Button) findViewById(R.id.imageButton2);
-		imageButton3 = (Button) findViewById(R.id.imageButton3);
-		imageButton4 = (Button) findViewById(R.id.imageButton4);
+		coverImageButton = (ImageButton) findViewById(R.id.coverImageButton);
+		imageButton1 = (ImageButton) findViewById(R.id.imageButton1);
+		imageButton2 = (ImageButton) findViewById(R.id.imageButton2);
+		imageButton3 = (ImageButton) findViewById(R.id.imageButton3);
+		imageButton4 = (ImageButton) findViewById(R.id.imageButton4);
 		uploadToFacebook = (Button) findViewById(R.id.uploadToFacebookButton);
 		progress_overlay = (RelativeLayout) findViewById(R.id.progress_layout);
 		
@@ -99,7 +98,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 		enableButton(imageButton2, false, DISABLED_ALPHA);
 		enableButton(imageButton3, false, DISABLED_ALPHA);
 		enableButton(imageButton4, false, DISABLED_ALPHA);
-		enableButton(uploadToFacebook, false, DISABLED_ALPHA);
+		uploadToFacebook.setEnabled(false);
 		progress_overlay.setVisibility(View.GONE);
 		
 		/*Set click listeners on all the buttons*/
@@ -168,7 +167,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	
 	
 	@SuppressLint("NewApi")
-	private void enableButton(Button button, boolean enable, float alpha){
+	private void enableButton(ImageButton button, boolean enable, float alpha){
 		button.setEnabled(enable);
 		button.setAlpha(alpha);
 	}
@@ -176,7 +175,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	
 	private void takePicture() {
 		chooserType = ChooserType.REQUEST_CAPTURE_PICTURE;
-		imageChooserManager = new ImageChooserManager(this, ChooserType.REQUEST_CAPTURE_PICTURE, "myfolder", true);
+		imageChooserManager = new ImageChooserManager(this, ChooserType.REQUEST_CAPTURE_PICTURE, getResources().getString(R.string.photo_uploader), true);
 		imageChooserManager.setImageChooserListener(this);
 		try {
 			progress_overlay.setVisibility(View.VISIBLE);
@@ -190,7 +189,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 	
 	private void showPhotoSelectionDialog(View v) {
 		// set selectedButton to use it later for showing selected image as this button's background
-		selectedButton = (Button) v;
+		selectedButton = (ImageButton) v;
 		
 		CharSequence options[] = getResources().getStringArray(R.array.photo_selection_options);
 
@@ -245,7 +244,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 				// and if image is not 
 				progress_overlay.setVisibility(View.GONE);
 				if (image != null) {
-					selectedButton.setBackground(Drawable.createFromPath(image.getFilePathOriginal()));
+					selectedButton.setImageDrawable(Drawable.createFromPath(image.getFilePathOriginal()));
 					handleImageSelection(selectedButton.getId(), image.getFilePathOriginal());
 				}
 				else{
@@ -264,14 +263,14 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 				filePaths.add(0, path);
 				
 				// On first photo selection enable coverImageButton and enable it
-				coverImageButton.setBackground(Drawable.createFromPath(path));
+				coverImageButton.setImageDrawable(Drawable.createFromPath(path));
 				enableButton(coverImageButton, true, ENABLED_ALPHA);
 				
 				// Enable next button to add photo
 				enableButton(imageButton2, true, ENABLED_ALPHA);
 				
 				// Enable uploadToFacebook button
-				enableButton(uploadToFacebook, true, ENABLED_ALPHA);
+				uploadToFacebook.setEnabled(true);
 				break;
 			case R.id.imageButton2:
 				// Add file path to the list and enable next add button
@@ -463,7 +462,7 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
             	optionDialog.dismiss();
             	
             	// Show the selected image on cover image button
-            	coverImageButton.setBackground(Drawable.createFromPath(filePaths.get(position)));
+            	coverImageButton.setImageDrawable(Drawable.createFromPath(filePaths.get(position)));
             }
         });
         optionDialog.setView(gridView);
