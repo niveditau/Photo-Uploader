@@ -192,8 +192,10 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 		selectedButton = (ImageButton) v;
 		
 		CharSequence options[] = getResources().getStringArray(R.array.photo_selection_options);
-
+		
 		AlertDialog.Builder builder = new AlertDialog.Builder(ImageUploaderActivity.this);
+		final AlertDialog alert = builder.create();
+		
 		builder.setTitle(getResources().getText(R.string.pick_an_option));
 		
 		// Based on user selection take the appropriate action
@@ -208,6 +210,14 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 		        }
 		    }
 		});
+		builder.setNegativeButton(getResources().getString(R.string.cancel), new DialogInterface.OnClickListener() {
+			
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				alert.dismiss();
+			}
+		});
+		
 		builder.show();
 	}
 	

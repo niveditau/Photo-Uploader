@@ -24,6 +24,7 @@
     <string name="error_message"> Please try again!</string>
     <string name="photo_selection_error_message">There was an error in selecting the photo. Please try again!</string>
     <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
     <string-array name="photo_selection_options">
 	    <item>Take Photo</item>
 	    <item>Choose Photo</item>
