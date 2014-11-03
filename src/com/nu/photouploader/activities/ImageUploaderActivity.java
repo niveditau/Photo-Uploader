@@ -391,6 +391,8 @@ public class ImageUploaderActivity extends Activity implements ImageChooserListe
 					                	// Navigate user to the upload confirmation activity
 					                	Intent intent = new Intent(ImageUploaderActivity.this, ConfirmationActivity.class);
 					    				startActivity(intent);
+					    				ImageUploaderActivity.this.overridePendingTransition(android.R.anim.slide_in_left,
+					    		                android.R.anim.slide_out_right);
 					    				finish();
 				                	}
 			                	
